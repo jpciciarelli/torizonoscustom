@@ -22,7 +22,7 @@ CPU: AMD Ryzen 9 9900X (24) @ 5.658GHz
 GPU: NVIDIA GeForce GTX 1630
 Memory: 2733MiB / 31720MiB
 ```
-Sin máquina virtual recomendado por Toradex.
+Sin máquina virtual recomendado por Toradex. A Debian 12 se le habilitó el backport para tener un kernel actualizado y poder aprovechar el microprocesador.
 
 ## Pasos seguidos
 
@@ -144,8 +144,18 @@ Editar el contenido para que refleje el archivo tcbuild.yaml en el directorio "c
 
 Seguir los pasos de la guía [Loading Toradex Easy Installer](https://developer.toradex.com/easy-installer/toradex-easy-installer/loading-toradex-easy-installer/) con el "External Media Approach" y un pendrive.
 
-#### Historial de comandos
+En resumen:
 
-`$ tar -xf torizon-docker-verdin-imx8mp-Tezi_7.3.0-devel-20250929182408+build.0.tar -C /media/juan/8CFA-D6BE`
-
-Entrar al modo recovery en la placa madre.
+1. Descomprimir el archivo .tar generado en el paso **Compilar Torizon OS con modificaciones** en un pendrive
+1. Entrar en modo recovery en el kit
+1. Instalar la imagen del pendrive usando VNC
+1. Reiniciar el kit
+1. Desempaquetar la imagen personalizada en el paso **Personalizar la imagen de Torizon OS**:
+    ```
+    torizoncore-builder images unpack custom-torizon-docker-verdin-imx8mp/
+    ```
+    Tener en cuenta que deber ser el directorio generado al hacer `torizoncore-builder build`.
+1. Despliegue de la imagen al kit:
+    ```
+    torizoncore-builder deploy --remote-host <BOARD-IP> --remote-username <USERNAME> --remote-password <PASSWORD> --reboot
+    ```
