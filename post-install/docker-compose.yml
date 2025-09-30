@@ -1,0 +1,69 @@
+# /var/sota/storage/docker-compose/docker-compose.yml
+services:
+  generic:
+    image: 192.168.0.101:5002/generic:v0.0.0
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - type: bind
+        source: /tmp
+        target: /tmp
+      - type: bind
+        source: /dev
+        target: /dev
+      - type: bind
+        source: /dev/snd
+        target: /dev/snd
+    device_cgroup_rules:
+      # ... for tty
+      - "c 4:* rmw"
+      # ... for /dev/input devices
+      - "c 13:* rmw"
+      # ... for /dev/galcore
+      - "c 199:* rmw"
+      # ... for /dev/dri devices
+      - "c 226:* rmw"
+      # ... for /dev/snd devices
+      - "c 116:* rmw"
+    restart: no
+    command: sh -c "ip link set can0 type can bitrate 250000 && ip link set can0 up"
+    depends_on: [
+      weston
+    ]
+
+  weston:
+    image: torizon/weston-imx8:4
+    environment:
+      - ACCEPT_FSL_EULA=1
+    # Required to get udev events from host udevd via netlink
+    network_mode: host
+    volumes:
+      - type: bind
+        source: /tmp
+        target: /tmp
+      - type: bind
+        source: /dev
+        target: /dev
+      - type: bind
+        source: /run/udev
+        target: /run/udev
+      - /dev/snd:/dev/snd
+    cap_add:
+      - CAP_SYS_TTY_CONFIG
+    # Add device access rights through cgroup...
+    device_cgroup_rules:
+      # ... for tty
+      - "c 4:* rmw"
+      # ... for /dev/input devices
+      - "c 13:* rmw"
+      # ... for /dev/galcore
+      - "c 199:* rmw"
+      # ... for /dev/dri devices
+      - "c 226:* rmw"
+      # ... for /dev/dma_heap device
+      - "c 253:* rmw"
+      # ... for /dev/snd devices
+      - "c 116:* rmw"
+    restart: always
+
