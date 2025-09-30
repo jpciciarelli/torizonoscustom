@@ -27,7 +27,6 @@ services:
       # ... for /dev/snd devices
       - "c 116:* rmw"
     restart: no
-    command: sh -c "ip link set can0 type can bitrate 250000 && ip link set can0 up"
     depends_on: [
       weston
     ]
