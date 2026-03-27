@@ -1,0 +1,10 @@
+# Sample configuration file:
+input:
+  easy-installer:
+    local: images/torizon-docker-verdin-imx8mp-Tezi_7.5.0+build.30.tar
+customization:
+  splash-screen: vt_splash_screen.png
+output:
+  easy-installer:
+    local: torizon-docker-verdin-imx8mp-Tezi_7.5.0.CUSTOM
+    name: Torizon OS Custom - DSI 7" Touch
