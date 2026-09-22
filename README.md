@@ -22,15 +22,15 @@ CPU: AMD Ryzen 9 9900X (24) @ 5.658GHz
 GPU: NVIDIA GeForce GTX 1630
 Memory: 2733MiB / 31720MiB
 ```
-Sin máquina virtual recomendado por Toradex. A Debian 12 se le habilitó el backport para tener un kernel actualizado y poder aprovechar el microprocesador.
+No se recomienda usar una máquina virtual; Toradex recomienda trabajar en hardware real. A Debian 12 se le habilitó el backport para tener un kernel actualizado y poder aprovechar el microprocesador.
 
 ## Pasos seguidos
 
 ### Compilar Torizon OS sin modificaciones
 
 Seguir la guía [Build Torizon OS from Source With Yocto Project/OpenEmbedded](https://developer.toradex.com/torizon/in-depth/build-torizoncore-from-source-with-yocto-projectopenembedded/#nativetorizoncorebuild) seleccionando la opción "Native Torizon OS Build".
-Hacer los pasos hasta **Start Building** incluido, no hacer todabía la sección **Customization**. Esto es para ver si compila correctamente sin ninguna modificación. De todas formas al hacer pequeñas modificaciones a posteriori no se necesita descargar nada más y solo recompila una pequeña parte de lo que modifiquemos.
-Luego de hacer ```bitbake torizon-docker```, si todo sale bien, estará disponible la imagen tar en:
+Hacer los pasos hasta **Start Building** incluido, pero sin entrar todavía en la sección **Customization**. Esto sirve para comprobar que la compilación funciona correctamente sin ninguna modificación. De todas formas, al hacer pequeñas modificaciones posteriormente no es necesario descargar nada más y solo se recompila una pequeña parte de lo que modifiquemos.
+Luego de ejecutar `bitbake torizon-docker`, si todo sale bien, la imagen tar estará disponible en:
 ~/build/deploy/images/verdin-imx8mp/torizon-docker-verdin-imx8mp-Tezi_7.3.0-devel-20250929144048+build.0.tar
 
 #### Historial de comandos
@@ -50,17 +50,17 @@ $ bitbake torizon-docker
 
 ### Compilar Torizon OS con modificaciones
 
-Seguir la guía [Custom Meta Layers, Recipes and Images in Yocto Project (hello-world Examples)](https://developer.toradex.com/linux-bsp/os-development/build-yocto/custom-meta-layers-recipes-and-images-in-yocto-project-hello-world-examples/) pero teniendo en cuenta la wiki de KOAN [Modify the linux kernel with configuration fragments in Yocto](https://wiki.koansoftware.com/index.php/Modify_the_linux_kernel_with_configuration_fragments_in_Yocto) ya que la documentación oficial de Toradex no esta actualizada al día de la fecha (Septiembre 2025), pero las herramientas de desarrollo admiten el uso de 'fragments', como se sugirió en el foro de Toradex en el hilo [Kernel Configuration using Config](https://community.toradex.com/t/kernel-configuration-using-config/26200).
+Seguir la guía [Custom Meta Layers, Recipes and Images in Yocto Project (hello-world Examples)](https://developer.toradex.com/linux-bsp/os-development/build-yocto/custom-meta-layers-recipes-and-images-in-yocto-project-hello-world-examples/) teniendo en cuenta la wiki de KOAN [Modify the linux kernel with configuration fragments in Yocto](https://wiki.koansoftware.com/index.php/Modify_the_linux_kernel_with_configuration_fragments_in_Yocto), ya que la documentación oficial de Toradex no está actualizada al día de la fecha (septiembre de 2025). Sin embargo, las herramientas de desarrollo permiten el uso de 'fragments', como se sugirió en el foro de Toradex en el hilo [Kernel Configuration using Config](https://community.toradex.com/t/kernel-configuration-using-config/26200).
 
 #### Historial de comandos
 
-Mantener el terminal del historial de comandos de "Compilar Torizon OS sin modificaciones" (el anterior) o hacer de nuevo: `$ MACHINE=verdin-imx8mp source setup-environment build/`. Tener en cuenta que en cualquier caso quedamos en el directorio ~/build/.
+Mantener la terminal con el historial de comandos de "Compilar Torizon OS sin modificaciones" (el anterior) o volver a abrirla con: `$ MACHINE=verdin-imx8mp source setup-environment build/`. Tener en cuenta que, en cualquier caso, quedamos en el directorio ~/build/.
 
 `$ bitbake-layers create-layer ../layers/meta-customer`
 
 `$ nano ~/build/conf/bblayers.conf`
 
-Con este comando vamos a agregar la línea `${TOPDIR}/../layers/meta-customer \` al final del archivo bblayers.conf.
+Con este comando, vamos a agregar la línea `${TOPDIR}/../layers/meta-customer \` al final del archivo bblayers.conf.
 
 `$ mkdir -p ~/layers/meta-customer/recipes-kernel/linux/linux-toradex`
 
@@ -70,7 +70,7 @@ Con este comando vamos a agregar la línea `${TOPDIR}/../layers/meta-customer \`
 
 `$ bitbake -c menuconfig virtual/kernel`
 
-Poner en * los módulos `Sequencer support` y `Sequencer dummy client` ubicados en:
+Activar los módulos (seleccionando *) `Sequencer support` y `Sequencer dummy client`, ubicados en:
 ```
 Device Drivers  --->
   Sound card support  --->
@@ -82,11 +82,11 @@ Device Drivers  --->
 
 `$ cp ~/build/tmp/work/verdin_imx8mp-tdx-linux/linux-toradex/6.6.94+git/fragment.cfg ~/layers/meta-customer/recipes-kernel/linux/linux-toradex/fragment.cfg`
 
-Copia el archivo fragment.cfg creado con `bitbake -c diffconfig` al layer personalizado.
+Copia el archivo `fragment.cfg` generado con `bitbake -c diffconfig` al layer personalizado.
 
 `$ touch ~/layers/meta-customer/recipes-kernel/linux/linux-toradex%.bbappend`
 
-Tener en cuenta que al día de la fecha hay un error en la guía (Custom Meta Layers, Recipes and Images in Yocto Project (hello-world Examples)) en el directorio de este comando. Hay que seguir lo descrito en la wiki de KOAN.
+Tener en cuenta que, al día de la fecha, hay un error en la guía [Custom Meta Layers, Recipes and Images in Yocto Project (hello-world Examples)](https://developer.toradex.com/linux-bsp/os-development/build-yocto/custom-meta-layers-recipes-and-images-in-yocto-project-hello-world-examples/) en cuanto al directorio de este comando. Hay que seguir lo indicado en la wiki de KOAN.
 
 `$ nano ~/layers/meta-customer/recipes-kernel/linux/linux-toradex%.bbappend`
 
@@ -106,7 +106,7 @@ SRC_URI += "file://fragment.cfg"
 `git commit -m "First commit"`
 
 Con esto queda lista la modificación del kernel.
-Y volvemos a re-compilar el OS.
+Ahora volvemos a recompilar el sistema operativo.
 
 `$ cd ~/build/`
 
@@ -118,7 +118,7 @@ Seguir los pasos de la guía [Customize Torizon OS Images](https://developer.tor
 
 #### Historial de comandos
 
-En un terminal nuevo!
+En una terminal nueva:
 
 `$ mkdir -p ~/tcbdir/ && cd ~/tcbdir/`
 
@@ -136,26 +136,26 @@ En un terminal nuevo!
 
 `$ nano tcbuild.yaml`
 
-Editar el contenido para que refleje el archivo tcbuild.yaml en el directorio "customimage".
+Editar el contenido para que refleje el archivo `tcbuild.yaml` en el directorio "customimage".
 
 `$ torizoncore-builder build`
 
 ### Flashear Torizon OS
 
-Seguir los pasos de la guía [Loading Toradex Easy Installer](https://developer.toradex.com/easy-installer/toradex-easy-installer/loading-toradex-easy-installer/) con el "External Media Approach" y un pendrive.
+Seguir los pasos de la guía [Loading Toradex Easy Installer](https://developer.toradex.com/easy-installer/toradex-easy-installer/loading-toradex-easy-installer/) con el enfoque "External Media Approach" y un pendrive.
 
 En resumen:
 
-1. Descomprimir el archivo .tar generado en el paso **Compilar Torizon OS con modificaciones** en un pendrive
-1. Entrar en modo recovery en el kit
-1. Instalar la imagen del pendrive usando VNC
-1. Reiniciar el kit
-1. Desempaquetar la imagen personalizada en el paso **Personalizar la imagen de Torizon OS**:
+1. Descomprimir el archivo `.tar` generado en el paso **Compilar Torizon OS con modificaciones** en un pendrive.
+1. Entrar en modo recovery en la placa.
+1. Instalar la imagen desde el pendrive usando VNC.
+1. Reiniciar la placa.
+1. Desempaquetar la imagen personalizada del paso **Personalizar la imagen de Torizon OS**:
     ```
     torizoncore-builder images unpack custom-torizon-docker-verdin-imx8mp/
     ```
-    Tener en cuenta que deber ser el directorio generado al hacer `torizoncore-builder build`.
-1. Despliegue de la imagen al kit:
+    Tener en cuenta que debe ser el directorio generado al ejecutar `torizoncore-builder build`.
+1. Desplegar la imagen en la placa:
     ```
     torizoncore-builder deploy --remote-host <BOARD-IP> --remote-username <USERNAME> --remote-password <PASSWORD> --reboot
     ```
